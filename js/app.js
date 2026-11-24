@@ -263,6 +263,7 @@ function setLocation(loc, { persist = true } = {}) {
   url.searchParams.set('lon', loc.lon.toFixed(4));
   url.searchParams.set('name', loc.name);
   if (loc.tz) url.searchParams.set('tz', loc.tz); else url.searchParams.delete('tz');
+  if (loc.country) url.searchParams.set('cc', loc.country); else url.searchParams.delete('cc');
   history.replaceState(null, '', url);
   ctx.gen++;
   ctx.data = {};
@@ -277,7 +278,32 @@ function refreshAll() {
   layout();
 }
 
+// Official national weather services, used for the "check local updates" advisory.
+const WEATHER_SERVICES = {
+  US: ['the National Weather Service', 'https://www.weather.gov/'],
+  CA: ['Environment Canada', 'https://weather.gc.ca/'],
+  GB: ['the Met Office', 'https://www.metoffice.gov.uk/'],
+  IE: ['Met Éireann', 'https://www.met.ie/'],
+  AU: ['the Bureau of Meteorology', 'https://www.bom.gov.au/'],
+  NZ: ['MetService', 'https://www.metservice.com/'],
+  IN: ['the India Meteorological Department', 'https://mausam.imd.gov.in/'],
+  DE: ['Deutscher Wetterdienst', 'https://www.dwd.de/'],
+  FR: ['Météo-France', 'https://meteofrance.com/'],
+  NO: ['MET Norway (Yr)', 'https://www.yr.no/'],
+  ZA: ['the South African Weather Service', 'https://www.weathersa.co.za/'],
+  JP: ['the Japan Meteorological Agency', 'https://www.jma.go.jp/'],
+};
+function weatherService(country) {
+  return WEATHER_SERVICES[String(country || '').toUpperCase()] || ['your national weather service', 'https://worldweather.wmo.int/'];
+}
+
+function renderAdvisory() {
+  const [name, url] = weatherService(ctx.loc.country);
+  $('#advisory').innerHTML = `⚠️ Forecasts here are estimates from free data sources. <b>Before planning family outings or any outdoor activity, check the latest local weather updates and official alerts</b> from <a href="${url}" target="_blank" rel="noopener">${esc(name)}</a>.`;
+}
+
 function renderLocLine() {
+  renderAdvisory();
   const l = ctx.loc;
   $('#locline').innerHTML = `📍 <b>${esc(l.name)}</b> <span class="muted">${l.lat.toFixed(3)}°, ${l.lon.toFixed(3)}° · ${esc(getTimeZone())} · local time ${fmtTime(ctx.now)}</span>
     ${l.isDefault ? ' <em class="tag tag-warn">Default location: use 📍 or search to set yours</em>' : ''}`;
@@ -442,7 +468,7 @@ async function boot() {
   if (q.has('lat') && q.has('lon') && !isNaN(+q.get('lat')) && !isNaN(+q.get('lon'))) {
     const lat = +q.get('lat'), lon = +q.get('lon');
     const same = ctx.loc && Math.abs(ctx.loc.lat - lat) < 1e-3 && Math.abs(ctx.loc.lon - lon) < 1e-3;
-    setLocation(same ? ctx.loc : { lat, lon, name: q.get('name') || `${lat.toFixed(3)}°, ${lon.toFixed(3)}°`, tz: q.get('tz') || undefined });
+    setLocation(same ? ctx.loc : { lat, lon, name: q.get('name') || `${lat.toFixed(3)}°, ${lon.toFixed(3)}°`, tz: q.get('tz') || undefined, country: q.get('cc') || undefined });
   } else if (ctx.loc) {
     setLocation(ctx.loc);
   } else {

@@ -218,6 +218,7 @@ export default {
           <div class="dot" style="background:${scoreColor(n.score)}">${n.score}</div>
           <small>☁ ${n.cloud}%</small><small>🌙 ${Math.round(n.moon * 100)}%</small>
           ${n === bestNight ? '<em>Best</em>' : ''}</div>`).join('')}</div>` : ''}
+      <p class="advisory-inline">⚠️ Conditions can change quickly. Check your local weather service for the latest updates before planning family activities.</p>
       <p class="muted small">Forecast: Open-Meteo${ctx.data.air?.value ? ' + air-quality model' : ''}${seven.length ? ', 7Timer!' : ''}${ctx.data.nws?.value ? ', US National Weather Service alerts' : ''}. Times shown in the location's time zone.</p>`;
   },
 };
