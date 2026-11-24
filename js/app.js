@@ -14,10 +14,11 @@ import darkness from './cards/darkness.js';
 import events from './cards/events.js';
 import sky from './cards/sky.js';
 import launches from './cards/launches.js';
+import spots, { findSpots } from './cards/spots.js';
 
-const CARDS = [sky, weather, aurora, moon, planets, meteors, eclipses, satellites, darkness, events, launches];
+const CARDS = [sky, weather, aurora, moon, planets, meteors, eclipses, satellites, darkness, spots, events, launches];
 const BY_ID = Object.fromEntries(CARDS.map((c) => [c.id, c]));
-const WIDE = new Set(['sky', 'weather', 'events']);
+const WIDE = new Set(['sky', 'weather', 'events', 'spots']);
 const DEFAULT_LOC = { lat: 51.4779, lon: -0.0015, name: 'Royal Observatory, Greenwich, UK', tz: 'Europe/London', elevation: 46, country: 'GB', isDefault: true };
 
 // ------------------------------------------------------------------ state
@@ -29,6 +30,7 @@ const ctx = {
   data: {},
   catalog: {},
   night: null,
+  gen: 0, // bumps on every location change so late responses are ignored
   get tz() { return getTimeZone(); },
 };
 
@@ -178,13 +180,24 @@ function renderBanner() {
 
 // ------------------------------------------------------------------ data loading
 function setData(key, promise) {
+  const gen = ctx.gen;
   ctx.data[key] = { status: 'loading' };
   rerenderFor(key);
   return promise.then(
-    (value) => { ctx.data[key] = { status: 'ok', value }; },
-    (err) => { console.warn(key, err); ctx.data[key] = { status: 'error', error: err?.name === 'AbortError' ? 'timed out' : err?.message || 'failed' }; },
-  ).then(() => rerenderFor(key));
+    (value) => { if (gen === ctx.gen) ctx.data[key] = { status: 'ok', value }; },
+    (err) => { console.warn(key, err); if (gen === ctx.gen) ctx.data[key] = { status: 'error', error: err?.name === 'AbortError' ? 'timed out' : err?.message || 'failed' }; },
+  ).then(() => { if (gen === ctx.gen) rerenderFor(key); });
 }
+
+// Data that is only fetched when a card asks for it (e.g. when it scrolls into view).
+const LAZY = {
+  spots: () => findSpots(ctx.loc, store.get('spotRadius', 60)),
+  spotsWx: () => api.multiCloud([ctx.loc, ...(ctx.data.spots?.value?.sites || []).slice(0, 12)]),
+};
+ctx.load = (key, force = false) => {
+  if (!LAZY[key] || (!force && ctx.data[key])) return;
+  setData(key, LAZY[key]());
+};
 
 let rerenderQueued = new Set();
 let rerenderTimer = null;
@@ -251,6 +264,7 @@ function setLocation(loc, { persist = true } = {}) {
   url.searchParams.set('name', loc.name);
   if (loc.tz) url.searchParams.set('tz', loc.tz); else url.searchParams.delete('tz');
   history.replaceState(null, '', url);
+  ctx.gen++;
   ctx.data = {};
   refreshAll();
   loadData();

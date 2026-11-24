@@ -22,6 +22,7 @@ It is a static web app (plain HTML, CSS and JavaScript, with no build step and n
 | 🪐 **Planets** | Tonight's visibility, best time, altitude, direction, magnitude and constellation. Also oppositions, greatest elongations, conjunctions and planet parades. |
 | 🛰️ **ISS & Bright Satellites** | Visible passes of the ISS, Tiangong and Hubble for the next 5 days (start/peak/end direction, height, brightness), computed with SGP4 and an Earth-shadow check. |
 | 🌃 **Twilight, Darkness & Milky Way** | Golden/blue hour; civil, nautical and astronomical twilight; dark hours and moon-free dark hours; Milky Way core visibility; seasonal phenomena; equinoxes and solstices. |
+| 🏞️ **Dark-Sky Spots Nearby** | Parks, nature reserves, national parks, viewpoints, observatories and campgrounds near you (from OpenStreetMap), ranked for stargazing. Each shows estimated sky darkness (Bortle), elevation, **cloud cover tonight at that spot**, distance and direction, and opening hours. Links go to directions, OpenStreetMap and the light-pollution map, and everything is shown on an interactive map. Sort by best overall, best tonight, darkest or closest, with a search radius of 25–150 km. |
 | 📅 **Upcoming Sky Events** | One combined, filterable timeline of everything above, with a **"Priorities only"** filter. |
 | 🚀 **Rocket Launches** | Upcoming launches worldwide, flagged when one may be visible from you, including twilight "jellyfish" plumes. |
 
@@ -50,6 +51,9 @@ It is a static web app (plain HTML, CSS and JavaScript, with no build step and n
 | Aurora model, Kp index, solar wind, alerts, aurora map | [NOAA SWPC](https://www.swpc.noaa.gov/) | No |
 | Satellite orbits (TLE) | [CelesTrak](https://celestrak.org/), with fallbacks to [tle.ivanstanojevic.me](https://tle.ivanstanojevic.me/) and [wheretheiss.at](https://wheretheiss.at/) | No |
 | Rocket launches | [The Space Devs Launch Library 2](https://thespacedevs.com/llapi) (free tier, cached for 1 h) | No |
+| Parks, reserves, viewpoints, observatories, towns | [OpenStreetMap](https://www.openstreetmap.org/copyright) via the [Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API) (ODbL; fetched only when the section is on screen and cached for 3 days) | No |
+| Site elevation, per-site cloud forecast | [Open-Meteo](https://open-meteo.com/) elevation + forecast APIs | No |
+| Map | [Leaflet](https://leafletjs.com/) (BSD-2, bundled) + OpenStreetMap tiles | No |
 | Reverse geocoding | [BigDataCloud](https://www.bigdatacloud.com/) client-side API | No |
 | Sun, Moon, planets, eclipses, twilight | [Astronomy Engine](https://github.com/cosinekitty/astronomy) (MIT, bundled in `vendor/`) | — |
 | Satellite propagation | [satellite.js](https://github.com/shashwatak/satellite-js) (MIT, bundled in `vendor/`) | — |
@@ -70,7 +74,7 @@ Ideas for the future:
 * **Iridium-like flares** and other bright satellite passes
 * **Variable stars**, such as Algol minima
 * **Sunspots and solar flares** (NOAA SWPC X-ray flux) for solar observers
-* **Light-pollution (Bortle) estimate** for the chosen location
+* Real satellite-measured light-pollution data (e.g. VIIRS) to replace the population-based Bortle estimate
 * **Push notifications** for priority events (Web Push / PWA)
 
 ---
@@ -100,7 +104,7 @@ js/astro.js           night window, twilight, Moon helpers
 js/util.js            formatting, caching, charts, .ics
 js/cards/*.js         one module per dashboard section
 data/*.json           star catalogue, constellations, Milky Way, Messier
-vendor/               Astronomy Engine + satellite.js
+vendor/               Astronomy Engine, satellite.js, Leaflet
 ```
 
 Forecasts and visibility estimates are guides only. Always check local conditions, and never look at the Sun without certified eclipse protection.

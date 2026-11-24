@@ -208,3 +208,43 @@ export async function launches() {
   }
   throw lastErr;
 }
+
+// ---------------------------------------------------------------- Dark-sky spots (OpenStreetMap)
+const OVERPASS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+];
+
+/** Run an Overpass QL query, trying public mirrors in turn. */
+export async function overpass(query) {
+  let lastErr;
+  for (const url of OVERPASS) {
+    try {
+      return await fetchJSON(url, { body: 'data=' + encodeURIComponent(query), timeout: 60000 });
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error('Overpass unavailable');
+}
+
+/** Elevation (m) for up to 100 points per request (Open-Meteo, Copernicus DEM). */
+export async function elevations(points) {
+  const out = [];
+  for (let i = 0; i < points.length; i += 100) {
+    const chunk = points.slice(i, i + 100);
+    const url = `https://api.open-meteo.com/v1/elevation?latitude=${chunk.map((p) => p.lat.toFixed(4)).join(',')}&longitude=${chunk.map((p) => p.lon.toFixed(4)).join(',')}`;
+    const j = await fetchJSON(url, { ttl: 30 * 24 * HOUR });
+    out.push(...(j.elevation || chunk.map(() => null)));
+  }
+  return out;
+}
+
+/** Hourly cloud cover for several sites in one request. Returns one row array per site. */
+export async function multiCloud(points) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${points.map((p) => p.lat.toFixed(3)).join(',')}&longitude=${points.map((p) => p.lon.toFixed(3)).join(',')}&hourly=cloud_cover,precipitation_probability&timeformat=unixtime&forecast_days=3`;
+  const j = await fetchJSON(url, { ttl: 30 * MIN });
+  const arr = Array.isArray(j) ? j : [j];
+  return arr.map((r) => (r.hourly?.time || []).map((t, i) => ({ t: new Date(t * 1000), cloud: r.hourly.cloud_cover?.[i], pop: r.hourly.precipitation_probability?.[i] })));
+}

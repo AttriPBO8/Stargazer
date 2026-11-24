@@ -99,14 +99,15 @@ export const store = {
  * fetch JSON with a timeout and an optional localStorage cache (ttl in ms).
  * Cached copies are also used as a fallback when the network request fails.
  */
-export async function fetchJSON(url, { ttl = 0, timeout = 15000, text = false } = {}) {
+export async function fetchJSON(url, { ttl = 0, timeout = 15000, text = false, body = null } = {}) {
   const key = 'cache:' + url;
   const cached = ttl ? store.get(key) : null;
   if (cached && Date.now() - cached.t < ttl) return cached.v;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeout);
   try {
-    const res = await fetch(url, { signal: ctrl.signal });
+    const init = body ? { method: 'POST', body, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } } : {};
+    const res = await fetch(url, { ...init, signal: ctrl.signal });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const v = text ? await res.text() : await res.json();
     if (ttl) store.set(key, { t: Date.now(), v });
@@ -117,6 +118,13 @@ export async function fetchJSON(url, { ttl = 0, timeout = 15000, text = false } 
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** Initial bearing in degrees from point 1 to point 2. */
+export function bearing(lat1, lon1, lat2, lon2) {
+  const y = Math.sin((lon2 - lon1) * DEG) * Math.cos(lat2 * DEG);
+  const x = Math.cos(lat1 * DEG) * Math.sin(lat2 * DEG) - Math.sin(lat1 * DEG) * Math.cos(lat2 * DEG) * Math.cos((lon2 - lon1) * DEG);
+  return norm360(Math.atan2(y, x) * RAD);
 }
 
 /** Great-circle distance in km. */
