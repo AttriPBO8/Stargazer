@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stargazer: Your Night Sky Dashboard</title>
+  <meta name="description" content="See what's in the sky from where you are: constellations, aurora forecasts, moon phases, eclipses, meteor showers, planets, ISS passes and stargazing weather. Uses only free data.">
+  <meta name="theme-color" content="#05070f">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="vendor/astronomy.browser.min.js" defer></script>
+  <script src="vendor/satellite.min.js" defer></script>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="topbar">
+    <div class="brand"><img src="assets/icon.svg" alt="" width="28" height="28"> <span>Stargazer</span></div>
+    <div class="loc-controls">
+      <button id="locBtn" class="btn">📍 My location</button>
+      <form id="search" role="search" autocomplete="off">
+        <input id="searchInput" type="search" placeholder="Search a city or enter lat, lon…" aria-label="Search location" aria-controls="suggest">
+        <ul id="suggest" role="listbox" hidden></ul>
+      </form>
+    </div>
+    <div class="tools">
+      <button id="custBtn" class="btn primary" title="Choose and order your priority events">★<span class="lbl"> Customize</span></button>
+      <button id="unitsBtn" class="btn" title="Switch units">°C · km</button>
+      <button id="redBtn" class="btn" title="Red night-vision mode preserves your dark adaptation" aria-pressed="false">🔴<span class="lbl"> Night mode</span></button>
+      <button id="shareBtn" class="btn" title="Copy a link to this location">🔗</button>
+      <button id="refreshBtn" class="btn" title="Refresh data">⟳</button>
+    </div>
+  </header>
+
+  <div id="locline" class="locline" aria-live="polite"></div>
+  <div id="banner" class="banner" aria-live="polite"></div>
+  <section id="highlights" class="highlights" aria-label="Highlights"></section>
+
+  <main id="main">
+    <div id="priority-zone" class="zone">
+      <h2 class="zone-title">★ Your priority events</h2>
+      <div id="pgrid" class="grid"></div>
+    </div>
+    <div id="rest-zone" class="zone">
+      <h2 class="zone-title" id="rest-title">Sky events</h2>
+      <div id="rgrid" class="grid"></div>
+    </div>
+  </main>
+
+  <dialog id="customize" aria-labelledby="cust-title">
+    <form method="dialog" class="dlg">
+      <header><h2 id="cust-title">Customize your dashboard</h2><button type="button" id="cust-close" class="icon-btn" aria-label="Close">✕</button></header>
+      <p class="muted">Mark the events you care about as <b>★ Priority</b>. They move to the top of the page in the order shown here, and you'll get alerts for them in the banner. Drag rows or use ▲▼ to reorder.</p>
+      <ul id="cust-list" class="cust-list"></ul>
+      <footer><button type="button" id="cust-reset" class="btn">Reset to default</button><button class="btn primary">Done</button></footer>
+    </form>
+  </dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <footer class="site-foot">
+    <p>Stargazer runs entirely in your browser and uses only free, open data sources:
+      <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (weather, air quality, geocoding, CC BY 4.0) ·
+      <a href="https://www.7timer.info/" target="_blank" rel="noopener">7Timer!</a> ·
+      <a href="https://www.swpc.noaa.gov/" target="_blank" rel="noopener">NOAA SWPC</a> ·
+      <a href="https://www.weather.gov/" target="_blank" rel="noopener">US NWS</a> ·
+      <a href="https://celestrak.org/" target="_blank" rel="noopener">CelesTrak</a> ·
+      <a href="https://thespacedevs.com/llapi" target="_blank" rel="noopener">The Space Devs</a> ·
+      <a href="https://www.bigdatacloud.com/" target="_blank" rel="noopener">BigDataCloud</a>.
+      Astronomy is computed locally with <a href="https://github.com/cosinekitty/astronomy" target="_blank" rel="noopener">Astronomy Engine</a> and
+      <a href="https://github.com/shashwatak/satellite-js" target="_blank" rel="noopener">satellite.js</a>. Star data comes from
+      <a href="https://github.com/ofrohn/d3-celestial" target="_blank" rel="noopener">d3-celestial</a>.</p>
+    <p class="muted">Forecasts are estimates. Always check local conditions before heading out.</p>
+  </footer>
+</body>
+</html>
